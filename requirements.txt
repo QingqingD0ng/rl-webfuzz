@@ -1,0 +1,5 @@
+Flask==2.1.2
+matplotlib==3.4.3
+mitdeeplearning==0.2.0
+numpy==1.21.6
+tensorflow==2.8.0
