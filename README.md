@@ -100,7 +100,7 @@ API包括模型初始化、参数设置、预测action、模型训练等。模�
 {code: 200, msg: "Get action successfully!", data: 1}
 ```
 
-### trainStep
+### /trainStep
 
 一个训练step,如果当前回合已达到设置的episodes，则不会训练。模型训练时会自动记录reward历史，保存至当前save_path里的XXXloss_history.py。训练过程中如果效果提升时，模型会自动保存。
 
