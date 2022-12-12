@@ -97,7 +97,7 @@ class DQN:
         self.eval_model.save_weights(save_path)
         dict = {}
         properties = ['n_actions', 'batch_size', 'memory_size', 'episode', 'target_update', 'EPSILON', 'GAMMA',
-                      'learning_rate', 'ddqn', 'memory', 'smoothed_reward', 'i_episode', 'best_reward', 'total_reward', 'Transition']
+                      'learning_rate', 'ddqn', 'memory', 'smoothed_reward', 'i_episode', 'best_reward','save_path']
         for p in properties:
             dict[p] = self.__dict__[p]
         with open(save_path+".dict", 'wb') as f:
@@ -186,7 +186,7 @@ class DQN:
             if self.best_reward < self.total_reward:
                 self.best_reward = self.total_reward
                 self.save(self.save_path+"-best")
-                logging.info('model saved at :' + str(self.save_path) +
+                logging.info('model saved at :' + str(self.save_path+"-best") +
                              ' with reward: '+str(self.total_reward))
             self.total_reward = 0
             self.i_episode += 1
@@ -194,7 +194,8 @@ class DQN:
             np.save(self.save_path+'_loss_history', loss_history)
             if self.i_episode % self.target_update == 0:
                 self.save(self.save_path)
-
+                logging.info('model saved at :' + str(self.save_path) +
+                             ' with reward: '+str(self.total_reward))
 
 class PolicyGradient:
 
