@@ -97,7 +97,7 @@ class DQN:
         self.eval_model.save_weights(save_path)
         dict = {}
         properties = ['n_actions', 'batch_size', 'memory_size', 'episode', 'target_update', 'EPSILON', 'GAMMA',
-                      'learning_rate', 'ddqn', 'memory', 'smoothed_reward', 'i_episode', 'best_reward','save_path']
+                      'learning_rate', 'ddqn', 'memory', 'smoothed_reward', 'i_episode', 'best_reward', 'save_path']
         for p in properties:
             dict[p] = self.__dict__[p]
         with open(save_path+".dict", 'wb') as f:
@@ -188,16 +188,17 @@ class DQN:
                 self.save(self.save_path+"-best")
                 logging.info('model saved at :' + str(self.save_path+"-best") +
                              ' with reward: '+str(self.total_reward))
-            
+
             loss_history = np.array(self.smoothed_reward.get())
             np.save(self.save_path+'_loss_history', loss_history)
-            
+
             if self.i_episode % self.target_update == 0:
                 self.save(self.save_path)
                 logging.info('model saved at :' + str(self.save_path) +
                              ' with reward: '+str(self.total_reward))
             self.i_episode += 1
             self.total_reward = 0
+
 
 class PolicyGradient:
 
@@ -227,7 +228,6 @@ class PolicyGradient:
         self.model = create_network(n_actions)
         self.memory = self.Memory()
         logging.info('POLICY GRADIENT MODEL INITIATED SUCCESFULLY!')
-
 
     def choose_action(self, state, single=True):
         state = np.expand_dims(state, axis=0) if single else state
@@ -322,7 +322,6 @@ class QLearning:
         else:
             action = np.random.randint(0, self.n_actions)
         return action
-
 
     def start_training(self, initial_state, save_path):
         logging.info(
@@ -560,7 +559,7 @@ def setParameter():
         for key in data:
             if hasattr(model, key):
                 setattr(model, key, data[key])
-                logging.info("set parameter", key, ":", data[key])
+                logging.info("set parameter", key + ":" + data[key])
         return jsonify({"code": 200, "msg": 'Set parameter successfully!', "data": str(model.__dict__)})
 
 
