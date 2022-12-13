@@ -574,7 +574,7 @@ def deleteModel():
 
 
 @app.route("/saveModel")
-def saveModel(path):
+def saveModel():
     global model
     if not model:
         return jsonify({'code': 400, 'msg': 'Error! Model not initiate!! Use /initDQN or /initPolicyGradient to set a model'})
