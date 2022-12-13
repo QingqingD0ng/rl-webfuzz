@@ -188,14 +188,16 @@ class DQN:
                 self.save(self.save_path+"-best")
                 logging.info('model saved at :' + str(self.save_path+"-best") +
                              ' with reward: '+str(self.total_reward))
-            self.total_reward = 0
-            self.i_episode += 1
+            
             loss_history = np.array(self.smoothed_reward.get())
             np.save(self.save_path+'_loss_history', loss_history)
+            
             if self.i_episode % self.target_update == 0:
                 self.save(self.save_path)
                 logging.info('model saved at :' + str(self.save_path) +
                              ' with reward: '+str(self.total_reward))
+            self.i_episode += 1
+            self.total_reward = 0
 
 class PolicyGradient:
 
@@ -226,12 +228,6 @@ class PolicyGradient:
         self.memory = self.Memory()
         logging.info('POLICY GRADIENT MODEL INITIATED SUCCESFULLY!')
 
-    def save(self, save_path):
-        if not save_path:
-            save_path = self.save_path
-        self.model.save_weights(self.save_path)
-        with open(save_path+"dict", 'wb') as f:
-            dill.dump(self.__dict__, f)
 
     def choose_action(self, state, single=True):
         state = np.expand_dims(state, axis=0) if single else state
@@ -327,12 +323,6 @@ class QLearning:
             action = np.random.randint(0, self.n_actions)
         return action
 
-    def save(self, save_path=None):
-        if not save_path:
-            save_path = self.save_path
-        np.save(save_path, self.q_table)
-        with open(save_path+"dict", 'wb') as f:
-            dill.dump(self.__dict__, f)
 
     def start_training(self, initial_state, save_path):
         logging.info(
