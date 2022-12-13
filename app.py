@@ -577,7 +577,7 @@ def saveModel():
     global model
     if not model:
         return jsonify({'code': 400, 'msg': 'Error! Model not initiate!! Use /initDQN or /initPolicyGradient to set a model'})
-    model.save()
+    model.save(model.save_path)
     return jsonify({"code": 200, "msg": 'Model saved successfully!', "data": str(model.__dict__)})
 
 
