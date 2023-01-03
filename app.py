@@ -228,7 +228,32 @@ class PolicyGradient:
         self.model = create_network(n_actions)
         self.memory = self.Memory()
         logging.info('POLICY GRADIENT MODEL INITIATED SUCCESFULLY!')
+    def save(self,save_path):
+        if not save_path:
+            save_path = self.save_path
 
+        self.model.save_weights(save_path)
+        dict = {}
+        properties = ['n_actions', 'batch_size',  'episode',   'GAMMA',
+                      'learning_rate',  'memory', 'smoothed_reward', 'i_episode', 'best_reward', 'save_path']
+        for p in properties:
+            dict[p] = self.__dict__[p]
+        with open(save_path+".dict", 'wb') as f:
+            dill.dump(dict, f)
+
+    def load(self, path):
+        if not path:
+            return False
+        if os.path.isfile(path+".dict"):
+            with open(path+".dict", 'rb') as f:
+                dict = dill.load(f)
+            self.__dict__.update(dict)
+            self.model.load_weights(path)
+           
+            if not math.isinf(self.best_reward):
+                return True
+            else:
+                return False
     def choose_action(self, state, single=True):
         state = np.expand_dims(state, axis=0) if single else state
         logits = self.model.predict(state)
@@ -272,11 +297,13 @@ class PolicyGradient:
             'start training------------------------------------------------')
         self.smoothed_reward = mdl.util.LossHistory(smoothing_factor=0.95)
         self.i_episode = 0
+        self.total_reward = 0
         self.best_reward = float('-inf')
         os.mkdir(save_path)
         self.save_path = save_path+'PolicyGradient'
 
     def train(self, state, action, next_state, reward, done):
+        self.total_reward += reward
         logging.info('train episode:', self.i_episode)
         self.memory.add_to_memory(state, action, reward)
 
@@ -285,22 +312,22 @@ class PolicyGradient:
                             np.vstack(self.memory.states),
                             np.array(self.memory.actions),
                             self.discount_rewards(self.memory.rewards))
-            total_reward = sum(self.memory.rewards)
+
             logging.info('train episode:', self.i_episode,
-                         'finished. Total reward:', total_reward)
+                         'finished. Total reward:', self.total_reward)
 
-            if self.best_reward < total_reward:
-                self.best_reward = total_reward
+            if self.best_reward < self.total_reward:
+                self.best_reward = self.total_reward
                 self.save(self.save_path+"-best")
-                # saveModel(self.save_path)
-                logging.info('model saved at :', self.save_path,
-                             'with reward:', total_reward)
+                logging.info('model saved at :', self.save_path+"-best",
+                             'with reward:', self.total_reward)
 
-            self.smoothed_reward.append(total_reward)
+            self.smoothed_reward.append(self.total_reward)
             self.i_episode += 1
+            self.total_reward = 0
             self.memory.clear()
             loss_history = np.array(self.smoothed_reward.get())
-            np.save(self.save_path+'_loss_history', loss_history)
+   
 
 
 class QLearning:
