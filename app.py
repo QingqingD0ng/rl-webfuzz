@@ -1,6 +1,3 @@
-from imp import IMP_HOOK
-import imp
-from operator import mod
 import numpy as np
 import random
 import mitdeeplearning as mdl
@@ -9,7 +6,6 @@ import os
 import time
 import math
 from collections import namedtuple
-import json
 from flask import Flask, request, jsonify
 import logging
 import dill
@@ -228,13 +224,14 @@ class PolicyGradient:
         self.model = create_network(n_actions)
         self.memory = self.Memory()
         logging.info('POLICY GRADIENT MODEL INITIATED SUCCESFULLY!')
-    def save(self,save_path):
+
+    def save(self, save_path):
         if not save_path:
             save_path = self.save_path
 
         self.model.save_weights(save_path)
         dict = {}
-        properties = ['n_actions', 'batch_size',  'episode',   'GAMMA',
+        properties = ['n_actions',  'episode',   'GAMMA',
                       'learning_rate',  'memory', 'smoothed_reward', 'i_episode', 'best_reward', 'save_path']
         for p in properties:
             dict[p] = self.__dict__[p]
@@ -249,11 +246,12 @@ class PolicyGradient:
                 dict = dill.load(f)
             self.__dict__.update(dict)
             self.model.load_weights(path)
-           
+
             if not math.isinf(self.best_reward):
                 return True
             else:
                 return False
+
     def choose_action(self, state, single=True):
         state = np.expand_dims(state, axis=0) if single else state
         logits = self.model.predict(state)
@@ -262,8 +260,8 @@ class PolicyGradient:
         return action[0] if single else action
 
     def normalize(self, x):
-        x -= np.mean(x)
-        x /= np.std(x)
+        x = x-np.mean(x)
+        x = x / np.std(x)
         return x.astype(np.float32)
 
     def discount_rewards(self, rewards):
@@ -304,7 +302,7 @@ class PolicyGradient:
 
     def train(self, state, action, next_state, reward, done):
         self.total_reward += reward
-        logging.info('train episode:', self.i_episode)
+        logging.info('train episode:'+str(self.i_episode))
         self.memory.add_to_memory(state, action, reward)
 
         if done:
@@ -313,21 +311,22 @@ class PolicyGradient:
                             np.array(self.memory.actions),
                             self.discount_rewards(self.memory.rewards))
 
-            logging.info('train episode:', self.i_episode,
-                         'finished. Total reward:', self.total_reward)
+            logging.info('train episode:'+str(self.i_episode) +
+                         'finished. Total reward:'+str(self.total_reward))
 
             if self.best_reward < self.total_reward:
                 self.best_reward = self.total_reward
                 self.save(self.save_path+"-best")
-                logging.info('model saved at :', self.save_path+"-best",
-                             'with reward:', self.total_reward)
+                logging.info('model saved at :' + self.save_path+"-best" +
+                             'with reward:'+str(self.total_reward))
 
             self.smoothed_reward.append(self.total_reward)
             self.i_episode += 1
             self.total_reward = 0
             self.memory.clear()
             loss_history = np.array(self.smoothed_reward.get())
-   
+            np.save(self.save_path+'_loss_history', loss_history)
+            self.save(self.save_path)
 
 
 class QLearning:
@@ -361,7 +360,7 @@ class QLearning:
         self.save_path = save_path + 'Qlearning'
 
     def train(self, state, action, next_state, reward, done):
-        logging.info('train episode:', self.i_episode)
+        logging.info('train episode:'+str(self.i_episode))
         self.total_reward += reward
         if not done:
             max_future_q = np.max(self.q_table[next_state])
